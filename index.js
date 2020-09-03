@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let tmpCurly = curly[i].replace(/[¶\r\n\t]/g, " ").replace(/[”]/g, "\"");
             let attributesExist = getAttributes(curly[i]);
 
-            if(attributesExist) {
+            if (attributesExist) {
                 parseAttributes(tmpCurly, attributesExist, attributes);
             }
 
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let pattern = /[”"'](.*?)[”"']/g;
         string = string.match(pattern).toString();
 
-        if(string.toString().includes(",")) {
+        if (string.toString().includes(",")) {
             string = string.slice(0, string.indexOf(","));
         }
         return string.slice(1, -1).trim();
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             element = element.slice(element.indexOf('"', equalSign + 2) + 1).trim();
             // console.log("izrezani="+element);
 
-            if(attributesExist.indexOf(",") > -1) {
+            if (attributesExist.indexOf(",") > -1) {
                 attributesExist = attributesExist.slice(attributesExist.indexOf(",") + 1);
             } else {
                 attributesExist = "";
