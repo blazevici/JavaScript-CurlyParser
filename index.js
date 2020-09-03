@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
         getFile("primjer1.txt").then(data => parse(data));
         getFile("primjer2.txt").then(data => parse(data));
 
-        // ispis polja s objektima
         console.log(arr);
     }
     JSparser();
@@ -23,40 +22,40 @@ document.addEventListener("DOMContentLoaded", () => {
         while(data.search(/\{/g) != -1) {
             data = parseCurly(data);
         }
-        /*let i = 1;
-        while(i > 0) {
-            data = parseCurly(data);
-            i--;
-        }*/
     }
 
     function parseCurly(data) {       
         var tempData = data;
-        var content = getContent(data);
-        content = content.filter(element => !(element.includes("{/")));
+        var curly = getCurly(data);
+        curly = curly.filter(element => !(element.includes("{/")));
 
-        for(let i = 0; i < content.length; i++) {
-            console.log(content[i]);
+        for(let i = 0; i < curly.length; i++) {
+            //console.log(curly[i]);
 
             var type;
             var attributes = [];
             var elementContent; 
             
-            let beginning = tempData.indexOf(content[i]);
+            let beginning = tempData.indexOf(curly[i]);
 
             type = tempData.substring(beginning + 1, tempData.indexOf("}"));
             type = getWord(type);
-            
-            if(content[i].indexOf("=") > -1) {
-                let attributeStart = checkAttribute(content[i]);
 
-                let tmpAtrribute = content[i].substring(attributeStart, content[i].indexOf("=")).trim();
-                let tmpValue = getBetweenQuotes(content[i]);
+            var tmpCurly = curly[i].replace(/[¶\r\n\t]/g, " ").replace(/[”]/g, "\"");
+            var attributesExist = getAttributes(curly[i]);
 
-                attributes.push({[tmpAtrribute]: tmpValue});
+            if(attributesExist) {
+                parseAttributes(tmpCurly, attributesExist, attributes);
             }
 
-            tempData = tempData.slice(tempData.indexOf(content[i + 1])).trim();
+            if (!curly[i].includes("/}")) {
+                elementContent = tempData.substring(tempData.indexOf("}"), tempData.indexOf("{/")).slice(1);
+            } else {
+                elementContent = "";
+            }
+
+            //console.log(tempData);
+            tempData = tempData.slice(tempData.indexOf(curly[i + 1])).trim();
             
             arr.push({"type": type, "attributes": attributes, "content": elementContent});
         }
@@ -64,16 +63,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return tempData;
     }
 
-    function getContent(string) {
+    function getCurly(string) {
         let pattern = /{([^}]+)}/g;
         string = string.match(pattern);
         return string;
     }
 
     function getBetweenQuotes(string) {
-        let pattern = /[”"](.*?)[”"]/g;
-        string = string.match(pattern);
-        return string.toString().slice(1, -1);
+        let pattern = /[”"'](.*?)[”"']/g;
+        string = string.match(pattern).toString();
+        if(string.toString().includes(",")) {
+            string = string.slice(0, string.indexOf(","));
+        }
+        return string.slice(1, -1).trim();
     }
 
     function getWord(string) {
@@ -84,11 +86,41 @@ document.addEventListener("DOMContentLoaded", () => {
         return firstWord;
     }
 
+    function getAttributes(string) {
+        let pattern = /(\w+)[=]/g;
+        string = string.match(pattern);
+        if(string) {
+            return string.toString();
+        }
+    }
+
+    function parseAttributes(element, attributesExist, attributes) {
+        while(attributesExist) {
+            let attributeStart = checkAttribute(element);
+            // console.log("početni="+element);
+            let equalSign = element.indexOf("=");
+
+            let tmpAtrribute = element.substring(attributeStart, equalSign).trim();
+            // console.log("attribute="+tmpAtrribute);
+            let tmpValue = getBetweenQuotes(element);
+            // console.log("value="+tmpValue)
+
+            element = element.slice(element.indexOf('"', equalSign + 2) + 1).trim();
+            // console.log("izrezani="+element);
+
+            if(attributesExist.indexOf(",") > -1) {
+                attributesExist = attributesExist.slice(attributesExist.indexOf(",") + 1);
+            } else {
+                attributesExist = "";
+            }
+
+            attributes.push({[tmpAtrribute]: tmpValue});
+        }
+    }
+
     function checkAttribute(element) {
         if (element.includes(" ")) {
             var attributeStart = element.indexOf(" ");
-        } else if (element.indexOf("\n") > -1) {
-            var attributeStart = element.indexOf("\n")
         }
 
         return attributeStart;
